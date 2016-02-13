@@ -35,7 +35,8 @@ import {output as pagespeed} from 'psi';
 import pkg from './package.json';
 import subtree from 'gulp-subtree';
 import clean from 'gulp-clean';
-
+import child from 'child_process';
+import gutil from 'gulp-util';
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
 
@@ -69,6 +70,7 @@ gulp.task('copy', () =>
   }).pipe(gulp.dest('dist'))
     .pipe($.size({title: 'copy'}))
 );
+
 
 // Compile and automatically prefix stylesheets
 gulp.task('styles', () => {
@@ -129,12 +131,12 @@ gulp.task('scripts', () =>
 
 // Scan your HTML for assets & optimize them
 gulp.task('html', () => {
-  return gulp.src('app/**/*.html')
+  return gulp.src('dist/**/*.html')
     .pipe($.useref({searchPath: '{.tmp,app}'}))
     // Remove any unused CSS
     .pipe($.if('*.css', $.uncss({
       html: [
-        'app/index.html'
+        'dist/index.html'
       ],
       // CSS Selectors for UnCSS to ignore
       ignore: []
@@ -206,7 +208,7 @@ gulp.task('serve:dist', ['default'], () =>
 gulp.task('default', ['clean'], cb =>
   runSequence(
     'styles',
-    ['lint', 'html', 'scripts', 'images', 'copy'],
+    ['lint', 'html', 'scripts', 'images', 'jekyll','copy'],
     'generate-service-worker',
     cb
   )
@@ -267,4 +269,25 @@ gulp.task('deploy', ['default'], () => {
   return gulp.src('dist')
     .pipe($.subtree())
     .pipe($.clean());
+});
+
+gulp.task('jekyll', () => {
+  const jekyll = child.spawn('jekyll', ['serve',
+    '--watch',
+    '-s',
+    'app/',
+    '-d',
+    'dist/',
+    '--incremental',
+    '--drafts'
+  ]);
+
+  const jekyllLogger = (buffer) => {
+    buffer.toString()
+      .split(/\n/)
+      .forEach((message) => gutil.log('Jekyll: ' + message));
+  };
+
+  jekyll.stdout.on('data', jekyllLogger);
+  jekyll.stderr.on('data', jekyllLogger);
 });

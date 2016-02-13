@@ -1,0 +1,15 @@
+
+<header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
+  <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+  </div>
+  <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+    <h3>{{ site.title }}</h3>
+  </div>
+  <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+  </div>
+  <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
+    {% for link in site.navigation %}
+    <a href="{{ link.url }}" class="mdl-layout__tab {% if page.url == link.url or page.layout == link.layout %} is-active {% endif %}">{{ link.text }}</a>
+    {% endfor %}
+  </div>
+</header>
