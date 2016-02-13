@@ -186,6 +186,8 @@ gulp.task('serve', ['scripts', 'styles'], () => {
   gulp.watch(['app/styles/**/*.{scss,css}'], ['styles', reload]);
   gulp.watch(['app/scripts/**/*.js'], ['lint', 'scripts']);
   gulp.watch(['app/images/**/*'], reload);
+  gulp.watch(['*.html', '_layouts/*.html', '_posts/*'], ['jekyll-rebuild']);
+
 });
 
 // Build and serve the output from the dist build
@@ -208,7 +210,7 @@ gulp.task('serve:dist', ['default'], () =>
 gulp.task('default', ['clean'], cb =>
   runSequence(
     'styles',
-    ['lint', 'html', 'scripts', 'images', 'jekyll','copy'],
+    ['lint', 'html', 'scripts', 'images', 'jekyll-rebuild','copy'],
     'generate-service-worker',
     cb
   )
@@ -271,23 +273,17 @@ gulp.task('deploy', ['default'], () => {
     .pipe($.clean());
 });
 
-gulp.task('jekyll', () => {
-  const jekyll = child.spawn('jekyll', ['serve',
-    '--watch',
+// Build the jekyll site
+gulp.task('jekyll-build', function(done) {
+  return child.spawn('jekyll', ['build',
     '-s',
     'app/',
     '-d',
-    'dist/',
-    '--incremental',
-    '--drafts'
-  ]);
+    'dist/'], {stdio: 'inherit'}).on('close', done);  });
 
-  const jekyllLogger = (buffer) => {
-    buffer.toString()
-      .split(/\n/)
-      .forEach((message) => gutil.log('Jekyll: ' + message));
-  };
-
-  jekyll.stdout.on('data', jekyllLogger);
-  jekyll.stderr.on('data', jekyllLogger);
+/**
+ * Rebuild Jekyll & do page reload
+ */
+gulp.task('jekyll-rebuild', ['jekyll-build', 'copy'], function () {
+    reload;
 });
